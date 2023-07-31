@@ -1,0 +1,342 @@
+package Analizador;
+import java_cup.runtime.Symbol;
+
+parser code
+{:
+    public String resultado="";
+    private Symbol s;
+    
+    public void syntax_error(Symbol s){
+        this.s = s;
+    }
+
+    public Symbol getS(){
+        return this.s;
+}
+:};
+
+terminal 
+    Sign_Comillas, Sign_Igual, Abrir_LLave,
+    Cerrar_LLave, Sign_Coma, Punto_Coma, Op_Suma, Op_Resta, Dos_puntos,
+    Op_Producto, Op_Division, Inicio_Html, Fin_Html, Inicio_Encabezado, Fin_Encabezado, Et_Titulo,
+    Inicio_Cuerpo, Fin_Cuerpo, Tab_Borde, Inicio_Tabla, Fin_Tabla, Inicio_Fila,
+    Fin_Fila, Nue_Columna, Fuent_Negrita, Ins_Imprimir, Salto_Linea, Inicio_Lista,
+    Fin_Lista, Et_Enlace, Inicio_Imagen, Nombre_Imagen, Et_Ancho, Et_Alto,
+    Fin_Imagen, Num_Int, Num_Float, Datos, Correo, Webpage, Error
+;
+
+non terminal 
+    INICIO, CUERPO, OPCIONES, TABLA, VARIABLE, NEGRITA, IMPRESION, LISTA, DIRECCION_WEB, 
+    IMAGEN, CONTENIDO, OPERACION_MAT, SIGNO, POSIBLES, RELLENO, FILAS, LISTA_DATOSS, OPERACION_COMPUESTA, 
+    DATOSS, SALTO;
+
+start with INICIO;
+
+
+
+INICIO ::=
+Inicio_Html Inicio_Encabezado Et_Titulo Sign_Igual Sign_Comillas DATOSS:a Sign_Comillas Fin_Encabezado CUERPO:b Fin_Html
+{:
+    resultado = "<html>\n"+ "<head>\n"+ "<title> "+ a + "</title>\n"+ "</head>\n" + b + "\n</html>";
+:}
+;
+
+DATOSS ::=
+Datos:a 
+        {:
+        RESULT = String.valueOf(a);
+        :} | 
+Datos:a DATOSS:b
+        {:
+        RESULT = String.valueOf(a) + " " + String.valueOf(b);
+        :}
+;
+
+CUERPO ::=
+Inicio_Cuerpo OPCIONES:a Fin_Cuerpo
+{:
+    RESULT = "<body>\n" + String.valueOf(a) + "\n</body>";
+:}
+;
+
+OPCIONES ::=
+TABLA:a {:
+    RESULT = String.valueOf(a);
+      :} | 
+VARIABLE:b {:
+    RESULT = String.valueOf(b);
+         :} | 
+NEGRITA:c {:
+    RESULT = String.valueOf(c);
+        :} | 
+Datos:d {:
+    RESULT = String.valueOf(d) + "<br>";
+     :} | 
+IMPRESION:e {:
+    RESULT = String.valueOf(e);
+          :} |
+LISTA:f {:
+    RESULT = String.valueOf(f);
+      :} |
+DIRECCION_WEB:g {:
+    RESULT = String.valueOf(g);
+    :} | 
+IMAGEN:h {:
+    RESULT = String.valueOf(h);
+       :} | 
+SALTO:i {:
+    RESULT = String.valueOf(i);
+      :} | 
+TABLA:a OPCIONES:aa {:
+    RESULT = String.valueOf(a) + "\n" + String.valueOf(aa);
+      :} | 
+VARIABLE:b OPCIONES:bb {:
+    RESULT = String.valueOf(b) + "\n" + String.valueOf(bb);
+         :} | 
+NEGRITA:c OPCIONES:cc {:
+    RESULT = String.valueOf(c) + "\n" + String.valueOf(cc);
+        :} | 
+Datos:d OPCIONES:dd {:
+    RESULT = String.valueOf(d) + "<br>" + "\n" + String.valueOf(dd);
+     :} | 
+IMPRESION:e OPCIONES:ee {:
+    RESULT = String.valueOf(e) + "\n" + String.valueOf(ee);
+          :} |
+LISTA:f OPCIONES:ff {:
+    RESULT = String.valueOf(f) + "\n" + String.valueOf(ff);
+      :} |
+DIRECCION_WEB:g OPCIONES:gg {:
+    RESULT = String.valueOf(g) + "\n" + String.valueOf(gg);
+    :} | 
+IMAGEN:h OPCIONES:hh {:
+    RESULT = String.valueOf(h) + "\n" + String.valueOf(hh);
+    :} |
+SALTO:i OPCIONES:ii {:
+    RESULT = String.valueOf(i) + "\n" + String.valueOf(ii);
+    :}
+;
+
+SALTO ::=
+Salto_Linea
+    {:
+        RESULT = "<br>\n";
+    :}
+;
+
+TABLA ::=
+Inicio_Tabla Tab_Borde Sign_Igual Num_Int:a FILAS:b Fin_Tabla 
+    {:
+        RESULT = "<table Borde=\"" + String.valueOf(a) + "\">\n" + String.valueOf(b) + "</table>";
+    :} |
+Inicio_Tabla FILAS:c Fin_Tabla
+    {:
+        RESULT = "<table>\n" + String.valueOf(c) + "\n<table>";
+    :}
+;
+
+FILAS ::=
+Inicio_Fila RELLENO:a Fin_Fila {:
+                        RESULT = "\n<tr>" + String.valueOf(a) + "</tr>";
+                    :} |
+Inicio_Fila RELLENO:b Fin_Fila FILAS:c
+    {:
+        RESULT = "\n<tr>" + String.valueOf(b) + "</tr>" + String.valueOf(c);
+    :}
+;
+
+RELLENO ::=
+Nue_Columna Sign_Igual Sign_Comillas CONTENIDO:a Sign_Comillas
+        {:
+        RESULT = "<td>" + String.valueOf(a) + "</td>";
+        :} |
+
+
+Nue_Columna Sign_Igual Sign_Comillas  CONTENIDO:a Sign_Comillas RELLENO:b 
+        {:
+        RESULT = "<td>" + String.valueOf(a) + "</td>" + String.valueOf(b);
+        :} |
+
+
+Nue_Columna Sign_Igual IMAGEN:a 
+        {:
+        RESULT = "<td>" + String.valueOf(a) + "</td>";
+        :} |
+
+
+Nue_Columna Sign_Igual IMAGEN:a RELLENO:b
+        {:
+        RESULT = "<td>" + String.valueOf(a) + "</td>" + String.valueOf(b);
+        :} |
+
+
+Nue_Columna Sign_Igual Sign_Comillas Correo:a Sign_Comillas
+        {:
+        RESULT = "<td>" + String.valueOf(a) + "</td>";
+        :} |
+
+
+Nue_Columna Sign_Igual Sign_Comillas Correo:a Sign_Comillas RELLENO:b 
+        {:
+        RESULT = "<td>" + String.valueOf(a) + "</td>" + String.valueOf(b);
+        :} 
+;
+
+VARIABLE ::=
+Datos:a Sign_Igual CONTENIDO:b Punto_Coma
+        {:
+        RESULT = String.valueOf(a) + "=" + String.valueOf(b) + ";";
+        :} 
+;
+
+NEGRITA ::=
+Fuent_Negrita Abrir_LLave CONTENIDO:a Cerrar_LLave
+        {:
+        RESULT = "<b>" + String.valueOf(a) + "</b><br>";
+        :} 
+;
+
+CONTENIDO ::=
+DATOSS:a 
+        {:
+        RESULT = String.valueOf(a);
+        :} | 
+Num_Int:b 
+        {:
+        RESULT = String.valueOf(b);
+        :}| 
+Num_Float:c 
+        {:
+        RESULT = String.valueOf(c);
+        :}| 
+OPERACION_MAT:d
+        {:
+        RESULT = String.valueOf(d);
+        :}| 
+Nombre_Imagen:e 
+        {:
+        RESULT = String.valueOf(e);
+        :}| 
+OPERACION_COMPUESTA:f
+        {:
+        RESULT = String.valueOf(f);
+        :}
+;
+
+OPERACION_COMPUESTA ::=
+Abrir_LLave OPERACION_MAT:a Cerrar_LLave 
+        {:
+        RESULT = "(" + String.valueOf(a) + ")";
+        :}| 
+Abrir_LLave OPERACION_MAT:a Cerrar_LLave SIGNO:b Num_Int:c
+        {:
+        RESULT = "(" + String.valueOf(a) + ")" + String.valueOf(b) + String.valueOf(c);
+        :}| 
+Abrir_LLave OPERACION_MAT:a Cerrar_LLave SIGNO:b Num_Float:c
+        {:
+        RESULT = "(" + String.valueOf(a) + ")" + String.valueOf(b) + String.valueOf(c);
+        :}
+;
+
+OPERACION_MAT ::=
+Num_Int:a SIGNO:b Num_Int:c 
+        {:
+        RESULT = String.valueOf(a) + String.valueOf(b) + String.valueOf(c);
+        :}| 
+Num_Float:a SIGNO:b Num_Float:c 
+        {:
+        RESULT = String.valueOf(a) + String.valueOf(b) + String.valueOf(c);
+        :}| 
+Num_Int:a SIGNO:b Num_Float:c 
+        {:
+        RESULT = String.valueOf(a) + String.valueOf(b) + String.valueOf(c);
+        :}| 
+Num_Float:a SIGNO:b Num_Int:c 
+        {:
+        RESULT = String.valueOf(a) + String.valueOf(b) + String.valueOf(c);
+        :}
+;
+
+SIGNO ::=
+Op_Suma:a 
+        {:
+        RESULT = String.valueOf(a);
+        :}| 
+Op_Resta:b 
+        {:
+        RESULT = String.valueOf(b);
+        :}| 
+Op_Producto:c 
+        {:
+        RESULT = String.valueOf(c);
+        :}| 
+Op_Division:d
+        {:
+        RESULT = String.valueOf(d);
+        :}
+;
+
+IMPRESION ::=
+Ins_Imprimir Abrir_LLave POSIBLES:a Cerrar_LLave
+        {:
+        RESULT = "<p>" + String.valueOf(a) + "</p>";
+        :}
+;
+
+POSIBLES ::=
+Datos:a 
+        {:
+        RESULT = String.valueOf(a);
+        :}| 
+Num_Int:b 
+        {:
+        RESULT = String.valueOf(b);
+        :}| 
+Datos:a POSIBLES:b 
+        {:
+        RESULT = String.valueOf(a) + String.valueOf(b);
+        :}| 
+Num_Int:a POSIBLES:b 
+        {:
+        RESULT = String.valueOf(a) + String.valueOf(b);
+        :}
+;
+
+LISTA ::=
+Inicio_Lista LISTA_DATOSS:a Fin_Lista
+        {:
+        RESULT = "<ul>" + String.valueOf(a) + "</ul>";
+        :}
+;
+
+
+
+LISTA_DATOSS ::=
+DATOSS:a Sign_Coma DATOSS:b 
+        {:
+        RESULT = "<li>" + String.valueOf(a) + "</li>" + "<li>" + String.valueOf(b) + "</li>";
+        :}| 
+DATOSS:a Sign_Coma LISTA_DATOSS:b
+        {:
+        RESULT = "<li>" + String.valueOf(a) + "</li>" + String.valueOf(b);
+        :}
+;
+
+DIRECCION_WEB::=
+Et_Enlace Sign_Igual Sign_Comillas Webpage:a Sign_Comillas
+        {:
+        RESULT ="<a href=\"" + String.valueOf(a) + "\">" + "</a>";
+        :}
+;
+
+IMAGEN ::=
+Inicio_Imagen Datos:a Fin_Imagen 
+        {:
+        RESULT ="<img src=\"" + String.valueOf(a) +"\">";
+        :}|
+Inicio_Imagen Nombre_Imagen Sign_Igual Sign_Comillas DATOSS:a Sign_Comillas Et_Enlace Sign_Igual Sign_Comillas Webpage:b Sign_Comillas Et_Ancho Dos_puntos Num_Int:c Et_Alto Dos_puntos Num_Int:d Fin_Imagen
+        {:
+        RESULT ="<img src=\"" + String.valueOf(b) + "\" alt=\"" + String.valueOf(a) + "\" Ancho=\"" + String.valueOf(c) + 
+"\" Alto=\"" + String.valueOf(d) + "\">";
+        :}
+;
+
